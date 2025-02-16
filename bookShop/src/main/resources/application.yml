@@ -1,0 +1,28 @@
+spring:
+  application:
+   name: bookShop
+  profiles:
+    active: dev
+  servlet:
+    multipart:
+      max-file-size: 50MB
+
+
+
+springdoc:
+  default-produces-media-type: application/json
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: swagger-ui.html
+
+
+server:
+  servlet:
+    context-path: /api/v1
+
+application:
+  security:
+    jwt:
+      expiration: 864000
