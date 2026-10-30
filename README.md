@@ -137,7 +137,15 @@ Base path: `/api/v1` · Interactive docs: **http://localhost:8080/api/v1/swagger
 | POST | `/feedbacks` | Rate and comment a book | JWT |
 | GET | `/feedbacks/book/{id}` | Feedback for a book (paged) | JWT |
 
-<!-- Add a Swagger UI screenshot here: docs/screenshots/swagger.png -->
+### Swagger UI
+
+All endpoints, grouped by resource. Every endpoint outside `/auth` needs a JWT:
+
+![Swagger UI endpoint list](docs/screenshots/swagger-endpoints.png)
+
+An authenticated call: after logging in and pasting the JWT into **Authorize**, `GET /book/owner` returns the caller's books as a paged response:
+
+![GET /book/owner returning a paged list of the caller's books](docs/screenshots/swagger-book-owner.png)
 
 ---
 
