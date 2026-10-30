@@ -1,0 +1,24 @@
+# In-memory database for tests: no MySQL or Docker needed
+spring:
+  datasource:
+    url: jdbc:h2:mem:booklibrary;MODE=MySQL;DB_CLOSE_DELAY=-1;NON_KEYWORDS=USER,VALUE
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  mail:
+    host: localhost
+    port: 1025
+
+application:
+  security:
+    mailing:
+      frontend:
+        activation-url: "http://localhost:4200/activate-account"
+    jwt:
+      # Test-only key, not used anywhere else
+      secret-key: "dGVzdC1vbmx5LWtleS1mb3ItYm9va2xpYnJhcnktdGVzdHMtMzJieXRlcw=="
+  file:
+    upload:
+      photo-output-path: ${java.io.tmpdir}/booklibrary-test-uploads
