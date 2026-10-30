@@ -1,0 +1,14 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Build output
+target/
+
+# Local secrets — copy .env.example to .env
+.env
+
+# Files uploaded at runtime
+uploads/
+bookShop/uploads/
