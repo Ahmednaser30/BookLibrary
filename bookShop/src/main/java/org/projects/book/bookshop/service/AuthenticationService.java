@@ -9,6 +9,7 @@ import org.projects.book.bookshop.dto.RegistrationRequest;
 import org.projects.book.bookshop.entity.Role;
 import org.projects.book.bookshop.entity.Token;
 import org.projects.book.bookshop.entity.User;
+import org.projects.book.bookshop.exception.OperationNotPermittedException;
 import org.projects.book.bookshop.security.EmailTemplateName;
 import org.projects.book.bookshop.repository.RoleRepository;
 import org.projects.book.bookshop.repository.TokenRepository;
@@ -104,10 +105,13 @@ emailService.sendEmail(user.getEmail(),
         token(jwtToken).build();
     }
     public void activateAccount(String token) throws MessagingException {
-        Token savedToken = tokenRepository.findByToken(token).orElseThrow(()-> new IllegalStateException("Token not found"));
+        Token savedToken = tokenRepository.findByToken(token).orElseThrow(()-> new OperationNotPermittedException("invalid activation code"));
+        if (savedToken.getValidatedAt() != null) {
+            throw new OperationNotPermittedException("activation code already used");
+        }
         if(LocalDateTime.now().isAfter(savedToken.getExpiresAt())){
             sendValidationEmail(savedToken.getUser());
-            throw new MessagingException("code is expired  and another code sent to the email");
+            throw new OperationNotPermittedException("activation code expired, a new code has been sent to your email");
 
         }
         User user = userRepository.findById(savedToken.getUser().getId()).orElseThrow(()->new UsernameNotFoundException("user not found"));

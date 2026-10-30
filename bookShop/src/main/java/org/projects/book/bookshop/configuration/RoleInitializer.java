@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class IntializeRole implements CommandLineRunner{
+public class RoleInitializer implements CommandLineRunner{
 private final RoleRepository roleRepository;
     @Override
     public void run(String... args) throws Exception {

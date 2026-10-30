@@ -2,6 +2,7 @@ package org.projects.book.bookshop.service;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.projects.book.bookshop.exception.OperationNotPermittedException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,10 +11,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 
 @Service
 @Slf4j
 public class FileStorageService {
+
+    private static final Set<String> ALLOWED_IMAGE_EXTENSIONS = Set.of("jpg", "jpeg", "png", "gif", "webp");
 
     @Value("${application.file.upload.photo-output-path}")
     private String fileUploadPath;
@@ -35,6 +39,10 @@ public class FileStorageService {
             }
         }
         final String fileExtension = getFileExtension(sourceFile.getOriginalFilename());
+        if (!ALLOWED_IMAGE_EXTENSIONS.contains(fileExtension)
+                || sourceFile.getContentType() == null || !sourceFile.getContentType().startsWith("image/")) {
+            throw new OperationNotPermittedException("only jpg, jpeg, png, gif or webp images are allowed");
+        }
         String targetFilePath = finalUploadPath + File.separator + System.currentTimeMillis() + "." + fileExtension;
         Path targetPath = Path.of(targetFilePath);
         try {
