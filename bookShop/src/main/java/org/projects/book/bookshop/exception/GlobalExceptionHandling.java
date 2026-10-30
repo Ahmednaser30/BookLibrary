@@ -2,6 +2,8 @@ package org.projects.book.bookshop.exception;
 
 
 import jakarta.mail.MessagingException;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandling {
 
 @ExceptionHandler(LockedException.class)
@@ -75,14 +78,22 @@ public class GlobalExceptionHandling {
                                 .build());
 
     }
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ExceptionResponse> handleException(EntityNotFoundException exception) {
+        return ResponseEntity.
+                status(HttpStatus.NOT_FOUND).body(
+                        ExceptionResponse.builder()
+                                .error(exception.getMessage())
+                                .build());
+    }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ExceptionResponse> handleException(Exception exception) {
-
+        // Log the details, but don't send internals (SQL, class names) to the client
+        log.error("Unhandled exception", exception);
         return ResponseEntity.
                 status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                         ExceptionResponse.builder()
                 .errorDescription("internal server error")
-                .error(exception.getMessage())
                 .build());
 
     }

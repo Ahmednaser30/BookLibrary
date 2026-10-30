@@ -1,7 +1,6 @@
 package org.projects.book.bookshop.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import jdk.dynalink.linker.LinkerServices;
 import lombok.RequiredArgsConstructor;
 import org.projects.book.bookshop.dto.*;
 import org.projects.book.bookshop.entity.Book;
@@ -46,15 +45,7 @@ public class BookService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("creationDate").descending());
         Page<Book> books = bookRepository.findAllDisplayableBooks(pageable,user.getId());
         List<BookResponse> bookResponses = books.stream().map(bookMapper::toBookResponse).toList();
-        return new PageResponse<>(
-                bookResponses,
-                books.getNumber(),
-                books.getSize(),
-                books.getTotalElements(),
-                books.getTotalPages(),
-                books.isFirst(),
-                books.isLast()
-        );
+        return PageResponse.of(books, bookResponses);
     }
 
     public PageResponse<BookResponse> findAllBooksByOwner(int page, int size, Authentication connectedUser) {
@@ -63,15 +54,7 @@ public class BookService {
         Pageable pageable = PageRequest.of(page, size,Sort.by("creationDate").descending());
         Page<Book> books = bookRepository.findAll(BookSpecification.withOwnerId(user.getId()),pageable);
         List<BookResponse> bookResponses = books.stream().map(bookMapper::toBookResponse).toList();
-        return new PageResponse<>(
-                bookResponses,
-                books.getNumber(),
-                books.getSize(),
-                books.getTotalElements(),
-                books.getTotalPages(),
-                books.isFirst(),
-                books.isLast()
-        );
+        return PageResponse.of(books, bookResponses);
     }
     public PageResponse<BorrowedBookResponse> findAllBorrowedBooks(int page, int size, Authentication connectedUser) {
         CustomUserDetails userDetails = (CustomUserDetails) connectedUser.getPrincipal();
@@ -80,15 +63,7 @@ public class BookService {
         Page<BookTransactionHistory> books = bookTransactionHistoryRepository.findAllBorrowedBooks(pageable,user.getId());
         List<BorrowedBookResponse> bookResponses = books.stream().map(bookMapper::toBorrowedBookResponse).toList();
 
-        return new PageResponse<>(
-                bookResponses,
-                books.getNumber(),
-                books.getSize(),
-                books.getTotalElements(),
-                books.getTotalPages(),
-                books.isFirst(),
-                books.isLast()
-        );
+        return PageResponse.of(books, bookResponses);
     }
     public PageResponse<BorrowedBookResponse> findAllReturnedBooks(int page, int size, Authentication connectedUser) {
         CustomUserDetails userDetails = (CustomUserDetails) connectedUser.getPrincipal();
@@ -97,15 +72,7 @@ public class BookService {
         Page<BookTransactionHistory> books = bookTransactionHistoryRepository.findAllReturnedBooks(pageable,user.getId());
         List<BorrowedBookResponse> bookResponses = books.stream().map(bookMapper::toBorrowedBookResponse).toList();
 
-        return new PageResponse<>(
-                bookResponses,
-                books.getNumber(),
-                books.getSize(),
-                books.getTotalElements(),
-                books.getTotalPages(),
-                books.isFirst(),
-                books.isLast()
-        );
+        return PageResponse.of(books, bookResponses);
     }
     public Long updateShareableStatus(Long bookId,Authentication connectedUser){
         Book book = bookRepository.findById(bookId).orElseThrow(()->new EntityNotFoundException("Book not found"));
@@ -123,7 +90,7 @@ public class BookService {
         CustomUserDetails userDetails = (CustomUserDetails) connectedUser.getPrincipal();
         User user =  userDetails.getUser();
         if (book.getOwner().getId().equals(user.getId())) {
-            book.setShareable(!book.isArchived());
+            book.setArchived(!book.isArchived());
             return bookRepository.save(book).getId();
         } else {
             throw new OperationNotPermittedException("only owner can update book");
@@ -139,7 +106,7 @@ public class BookService {
             if (book.getOwner().getId().equals(user.getId())) {
                 throw new OperationNotPermittedException("you cannot borrow your own book");
             }
-            final boolean isAlreadyBorrowed = bookTransactionHistoryRepository.isAlreadyBorrowed(bookId,user.getId());
+            final boolean isAlreadyBorrowed = bookTransactionHistoryRepository.existsByBookIdAndReturnedApprovedFalse(bookId);
     if (isAlreadyBorrowed){
         throw new OperationNotPermittedException("book is already borrowed");
     }
@@ -164,10 +131,7 @@ public class BookService {
             throw new OperationNotPermittedException("you cannot return this book");
         }
         BookTransactionHistory bookTransactionHistory= bookTransactionHistoryRepository.findByIdAndUserId(bookId,user.getId())
-                .orElseThrow(()->new OperationNotPermittedException("this book is not borrowed"));;
-        if(bookTransactionHistory==null){
-            throw new OperationNotPermittedException("this book is not borrowed");
-        }
+                .orElseThrow(()->new OperationNotPermittedException("this book is not borrowed"));
         bookTransactionHistory.setReturned(true);
         return bookTransactionHistoryRepository.save(bookTransactionHistory).getId();
     }
@@ -183,10 +147,7 @@ public class BookService {
             throw new OperationNotPermittedException("you cannot return this book");
         }
         BookTransactionHistory bookTransactionHistory= bookTransactionHistoryRepository.findByIdAndOwnerId(bookId,user.getId())
-                .orElseThrow(()->new OperationNotPermittedException("this book is not borrowed"));;
-        if(bookTransactionHistory==null){
-            throw new OperationNotPermittedException("this book is not borrowed");
-        }
+                .orElseThrow(()->new OperationNotPermittedException("this book is not borrowed"));
         bookTransactionHistory.setReturnedApproved(true);
         return bookTransactionHistoryRepository.save(bookTransactionHistory).getId();
     }
@@ -196,6 +157,9 @@ public class BookService {
         Book book = bookRepository.findById(bookId).orElseThrow(() -> new EntityNotFoundException("Book not found"));
         CustomUserDetails userDetails = (CustomUserDetails) connectedUser.getPrincipal();
         User user =  userDetails.getUser();
+        if (!book.getOwner().getId().equals(user.getId())) {
+            throw new OperationNotPermittedException("only owner can update book cover");
+        }
         String bookCover = fileStorageService.saveFile(file,user.getId());
         book.setBookCover(bookCover);
         bookRepository.save(book);

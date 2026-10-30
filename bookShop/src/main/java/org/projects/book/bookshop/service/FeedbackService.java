@@ -49,14 +49,6 @@ Feedback feedback=feedbackMapper.toFeedBack(request);
         Pageable pageable = PageRequest.of(page, size, Sort.by("creationDate").descending());
         Page<Feedback> feedbacks = feedbackRepository.findAllFeedbacksByBook(bookId,pageable);
         List<FeedbackResponse> responses = feedbacks.stream().map(f-> feedbackMapper.toFeedBackResponse(f, user.getId())).toList();
-        return new PageResponse<>(
-                responses,
-                feedbacks.getNumber(),
-                feedbacks.getSize(),
-                feedbacks.getTotalElements(),
-                feedbacks.getTotalPages(),
-                feedbacks.isFirst(),
-                feedbacks.isLast()
-        );
+        return PageResponse.of(feedbacks, responses);
     }
 }
