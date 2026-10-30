@@ -5,6 +5,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 
 import org.projects.book.bookshop.security.EmailTemplateName;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
 
+    @Value("${application.mail.from}")
+    private String fromAddress;
+
 
     public void sendEmail(String to,
                           String username,
@@ -34,7 +38,7 @@ public class EmailService {
         if (emailTemplate==null) {
             templateName="confirm-email";
         }else {
-            templateName=emailTemplate.name();
+            templateName=emailTemplate.getName();
         }
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage,
@@ -49,7 +53,7 @@ public class EmailService {
         Context context = new Context();
         context.setVariables(properties);
 
-        mimeMessageHelper.setFrom("ahmednaserm30@gmail.com");
+        mimeMessageHelper.setFrom(fromAddress);
         mimeMessageHelper.setTo(to);
         mimeMessageHelper.setSubject(subject);
 

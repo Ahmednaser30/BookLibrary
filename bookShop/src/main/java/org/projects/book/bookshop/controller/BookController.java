@@ -24,8 +24,8 @@ public class BookController {
     @PostMapping
     public ResponseEntity<Long> saveBook(
             @Valid @RequestBody BookRequest bookRequest,
-            Authentication connectedUSer){
-        return ResponseEntity.ok(bookService.save(bookRequest,connectedUSer));
+            Authentication connectedUser){
+        return ResponseEntity.ok(bookService.save(bookRequest,connectedUser));
     }
     @GetMapping("/{bookId}")
     public ResponseEntity<BookResponse> findById(@PathVariable Long bookId){

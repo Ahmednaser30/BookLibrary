@@ -17,7 +17,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
         contact = @Contact(
           name = "Ahmed",
           email = "ahmednaserm30@gmail.com",
-          url = "https://github.com/AhmedNaserm30"
+          url = "https://github.com/Ahmednaser30"
 
         ),
         description = "OpenApi documentation for BookLib",

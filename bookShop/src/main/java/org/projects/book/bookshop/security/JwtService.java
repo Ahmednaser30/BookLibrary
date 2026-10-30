@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,23 +16,31 @@ import java.util.*;
 import java.util.function.Function;
 
 @Service
+@Slf4j
 public class JwtService {
-    private static String SECRET = "";
+    private final String secret;
     @Value("${application.security.jwt.expiration}")
     private long jwtExpirationInMilliSec ;
 
-    public JwtService() {
+    // The key comes from JWT_SECRET so tokens survive restarts and can be shared between instances.
+    // Without it, a random key is generated as before.
+    public JwtService(@Value("${application.security.jwt.secret-key:}") String configuredSecret) {
+        if (configuredSecret != null && !configuredSecret.isBlank()) {
+            secret = configuredSecret;
+            return;
+        }
+        log.warn("No JWT secret configured (JWT_SECRET); using a random key, issued tokens will not survive a restart");
         try{
             KeyGenerator keyGenerator=KeyGenerator.getInstance("HmacSHA256");
             SecretKey sk=keyGenerator.generateKey();
-            SECRET= Base64.getEncoder().encodeToString(sk.getEncoded());
+            secret= Base64.getEncoder().encodeToString(sk.getEncoded());
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
     }
 
     private SecretKey getKey(){
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET);
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
 
     }
@@ -53,7 +62,7 @@ public class JwtService {
                     .claims(claims)
                     .subject(userDetails.getUsername())
                     .issuedAt(new Date(System.currentTimeMillis()))
-                    .expiration(new Date(System.currentTimeMillis()+jwtExpirationInMilliSec))
+                    .expiration(new Date(System.currentTimeMillis()+expiration))
                     .claim("authorities", authorities)
                     .signWith(getKey())
                     .compact();
