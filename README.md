@@ -9,8 +9,6 @@ A **Spring Boot 3** backend where users register, publish their books, lend them
 ![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker_Compose-2496ED?logo=docker&logoColor=white)
 
-<!-- Optional, recommended for honesty: "Started from the Book Social Network course; I extended it with …" -->
-
 ---
 
 ## ✨ Features
